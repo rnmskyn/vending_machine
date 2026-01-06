@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:snack_automat/models/product.dart';
+import 'package:snack_automat/storage/snack_service.dart';
 import 'package:snack_automat/widget/slotTile.dart';
 import 'package:snack_automat/models/slot.dart';
+import 'package:snack_automat/widget/coin_menu.dart';
 
 class Innerframe extends StatefulWidget {
   @override
@@ -11,56 +13,36 @@ class Innerframe extends StatefulWidget {
 class _InnerframeState extends State<Innerframe> {
   Product? _selectedProduct;
 
-  final List<Slot> _slots = [
-    Slot(
-      product: Product(
-        id: 'p1',
-        name: 'Riegel',
-        price: 1.99,
-        image: 'images/snack.png',
-      ),
-    ),
-    Slot(
-      product: Product(
-        id: 'p2',
-        name: 'Chips',
-        price: 0.99,
-        image: 'images/kekse.png',
-      ),
-    ),
-    Slot(
-      product: Product(
-        id: 'p3',
-        name: 'Kekse',
-        price: 1.99,
-        image: 'images/kekse.png',
-      ),
-    ),
-    Slot(
-      product: Product(
-        id: 'p4',
-        name: 'Bonbons',
-        price: 0.99,
-        image: 'images/snack.png',
-      ),
-    ),
-    Slot(
-      product: Product(
-        id: 'p5',
-        name: 'Waffeln',
-        price: 1.99,
-        image: 'images/snack.png',
-      ),
-    ),
-    Slot(
-      product: Product(
-        id: 'p6',
-        name: 'Wasser',
-        price: 0.99,
-        image: 'images/popcorn.png',
-      ),
-    ),
-  ];
+  List<Slot> _slots = [];
+  final SnackService _service = SnackService();
+  double _balance = 0.0;
+  @override
+  void initState() {
+    super.initState();
+    _loadSlots();
+  }
+
+  void _loadSlots() {
+    setState(() {
+      _slots = _service.getSlots();
+    });
+  }
+
+  void _showCoinMenu() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return CoinMenu(
+          onCoinTap: (double value) {
+            setState(() {
+              _balance += value;
+            });
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -117,9 +99,15 @@ class _InnerframeState extends State<Innerframe> {
                       color: const Color.fromARGB(255, 22, 22, 22),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text(
-                      'Münzen einwerfen',
-                      style: TextStyle(fontSize: 11, color: Colors.white),
+                    child: Text(
+                      _balance == 0
+                          ? 'Münzen einwerfen'
+                          : '${_balance.toStringAsFixed(2)} €',
+                      style: TextStyle(
+                        fontSize: _balance == 0 ? 12 : 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 76, 248, 53),
+                      ),
 
                       textAlign: TextAlign.center,
                     ),
@@ -153,38 +141,42 @@ class _InnerframeState extends State<Innerframe> {
                         : const SizedBox.shrink(),
                   ),
                   SizedBox(height: 10),
-                  Container(
-                    height: 30,
-                    width: 30,
-                    margin: const EdgeInsets.symmetric(vertical: 5),
+                  InkWell(
+                    onTap: _showCoinMenu,
+                    child: Container(
+                      height: 30,
+                      width: 30,
+                      margin: const EdgeInsets.symmetric(vertical: 5),
 
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Color(0xFFBDBDBD), // helles Metall
-                          Color(0xFFD6D6D6), // Hauptfläche
-                          Color(0xFFF0F0F0), // Glanzstreifen
-                          Color(0xFFC2C2C2), // zurück
-                        ],
-                        stops: [0.0, 0.4, 0.6, 1.0],
-                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xFFBDBDBD), // helles Metall
+                            Color(0xFFD6D6D6), // Hauptfläche
+                            Color(0xFFF0F0F0), // Glanzstreifen
+                            Color(0xFFC2C2C2), // zurück
+                          ],
+                          stops: [0.0, 0.4, 0.6, 1.0],
+                        ),
 
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color.fromARGB(255, 0, 0, 0),
-                        width: 2,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color.fromARGB(255, 0, 0, 0),
+                          width: 2,
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      '|',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                      child: const Center(
+                        child: Text(
+                          '|',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
                   ElevatedButton(
