@@ -1,34 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:snack_automat/models/coin.dart';
 
 class CoinMenu extends StatelessWidget {
-  // Das ist unser "heißer Draht" nach oben.
-  // Wir verlangen eine Funktion, die eine Zahl (double) entgegennimmt.
   final Function(double) onCoinTap;
 
   const CoinMenu({super.key, required this.onCoinTap});
 
-  // AUFGABE 1: Kopiere hier deine _getCoinImage Methode rein.
-  // Tipp: Du kannst den Unterstrich (_) weglassen, da sie nur hier gebraucht wird,
-  // oder ihn lassen, beides ist okay.
-  String getCoinImage(double value) {
-    if (value == 0.01) return 'images/coins/oneCent.png';
-    if (value == 0.02) return 'images/coins/twoCent.png';
-    if (value == 0.05) return 'images/coins/fiveCent.png';
-    if (value == 0.10) return 'images/coins/tenCent.png';
-    if (value == 0.20) return 'images/coins/twentyCent.png';
-    if (value == 0.50) return 'images/coins/fiftyCent.png';
-    if (value == 1.00) return 'images/coins/oneEuro.png';
-    if (value == 2.00) return 'images/coins/twoEuro.png';
-    return 'images/snack.png';
-  }
-
   @override
   Widget build(BuildContext context) {
-    // AUFGABE 2: Kopiere die Liste 'coins' hier rein.
-    final List<double> coins = [0.01, 0.02, 0.05, 0.10, 0.20, 0.50, 1.00, 2.00];
+    final List<int> coins = Coin.values;
 
-    // AUFGABE 3: Nimm den ganzen Container-Code aus deinem showModalBottomSheet
-    // und füge ihn hier als return ein.
     return Container(
       height: 300,
       padding: const EdgeInsets.all(20),
@@ -55,9 +36,10 @@ class CoinMenu extends StatelessWidget {
                     padding: const EdgeInsets.all(5),
                     backgroundColor: Colors.white,
                   ),
-                  onPressed: () => onCoinTap(coins[index]),
+                  // WICHTIG: Wir wandeln die Cents (int) hier in Euro (double) um
+                  onPressed: () => onCoinTap(coins[index] / 100),
                   child: Image.asset(
-                    getCoinImage(coins[index]),
+                    Coin.getImage(coins[index]),
                     fit: BoxFit.contain,
                   ),
                 );

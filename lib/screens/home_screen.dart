@@ -52,10 +52,38 @@ class Homescreen extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const Adminscreen(),
-                      ),
+                    final TextEditingController passwordController =
+                        TextEditingController();
+
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text("Admin Login"),
+                          content: TextField(
+                            controller: passwordController,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              hintText: "Passwort",
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                if (passwordController.text == "1234") {
+                                  Navigator.pop(context);
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const Adminscreen(),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text("Anmelden"),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
                   child: const Text(
