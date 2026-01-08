@@ -4,14 +4,9 @@ class Slot {
   static const int maxCapacity = 5;
 
   Product product;
-  bool selected;
   int quantity;
 
-  Slot({
-    required this.product,
-    this.quantity = maxCapacity,
-    this.selected = false,
-  });
+  Slot({required this.product, this.quantity = maxCapacity});
 
   bool isEmpty() {
     return quantity <= 0;
