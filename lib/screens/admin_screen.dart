@@ -28,16 +28,13 @@ class _AdminscreenState extends State<Adminscreen> {
       _coins = Coin.values.map((wert) => Coin(value: wert, count: 0)).toList();
     });
   }
-
-  double get _gesamtGeld {
-    double summe = 0.0;
-    // Wir gehen jede Münz-Sorte durch
+double get _gesamtGeld {
+  int summe=0;
     for (var coin in _coins) {
-      // Wert der Münze * Anzahl der Münzen
-      summe += (coin.value / 100) * coin.count; // Umrechnung in Euro
+      summe += coin.value * coin.count;
     }
-    return summe;
-  }
+    return summe.toDouble() / 100; // Umwandlung in Euro
+}
 
   @override
   Widget build(BuildContext context) {
