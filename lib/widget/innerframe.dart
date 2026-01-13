@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:snack_automat/models/product.dart';
+import 'package:snack_automat/models/transaction.dart';
 import 'package:snack_automat/storage/snack_service.dart';
 import 'package:snack_automat/widget/slotTile.dart';
 import 'package:snack_automat/models/slot.dart';
 import 'package:snack_automat/widget/coin_menu.dart';
+import 'package:snack_automat/models/coinbox.dart';
 
 class Innerframe extends StatefulWidget {
   @override
@@ -11,11 +13,13 @@ class Innerframe extends StatefulWidget {
 }
 
 class _InnerframeState extends State<Innerframe> {
+  Transaction? _currentTransaction;
   Product? _selectedProduct;
 
   List<Slot> _slots = [];
   final SnackService _service = SnackService();
-  double _balance = 0.0;
+  final Coinbox _coinBox = Coinbox();
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +32,10 @@ class _InnerframeState extends State<Innerframe> {
     });
   }
 
+  double get _currentBalance {
+    return (_currentTransaction?.amountPaid ?? 0) / 100;
+  }
+
   void _showCoinMenu() {
     showModalBottomSheet(
       context: context,
@@ -35,7 +43,11 @@ class _InnerframeState extends State<Innerframe> {
         return CoinMenu(
           onCoinTap: (double value) {
             setState(() {
-              _balance += value;
+              if (_currentTransaction == null) {
+                _currentTransaction = Transaction(transactionId: UniqueKey().toString());
+              }
+              int cents = (value * 100).round();
+              _currentTransaction!.updatePayment(cents);
             });
           },
         );
@@ -75,6 +87,12 @@ class _InnerframeState extends State<Innerframe> {
                     onTap: () {
                       setState(() {
                         _selectedProduct = slot.product;
+                        
+                        if (_currentTransaction != null) {
+                          _currentTransaction!.setProduct(slot.product.id, slot.product.price);
+                        } else {
+                          _currentTransaction = Transaction(transactionId: UniqueKey().toString(), productId: slot.product.id, price: slot.product.price);
+                        }
                       });
                     },
                     selected: _selectedProduct?.id == slot.product.id,
@@ -100,11 +118,11 @@ class _InnerframeState extends State<Innerframe> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      _balance == 0
+                      _currentBalance == 0
                           ? 'Münzen einwerfen'
-                          : '${_balance.toStringAsFixed(2)} €',
+                          : '${_currentBalance.toStringAsFixed(2)} €',
                       style: TextStyle(
-                        fontSize: _balance == 0 ? 12 : 18,
+                        fontSize: _currentBalance == 0 ? 12 : 18,
                         fontWeight: FontWeight.bold,
                         color: Color.fromARGB(255, 76, 248, 53),
                       ),
@@ -180,7 +198,23 @@ class _InnerframeState extends State<Innerframe> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {  if (_currentTransaction != null) {
+                        PaymentResult result = _coinBox.processPayment(_currentTransaction!.price, _currentTransaction!.insertedCoins);
+                      if (result.success) {
+                        setState(() {
+                          _currentTransaction!.completeTransaction(result.changeCoins);
+                          _selectedProduct = null;
+                          _currentTransaction = null;
+                        });
+                      } else {
+                        setState(() {
+                          _currentTransaction!.failTransaction();
+                          _selectedProduct = null;
+                          _currentTransaction = null;
+                        });
+                      }
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 1, 46, 40),
                       padding: const EdgeInsets.symmetric(
@@ -198,7 +232,13 @@ class _InnerframeState extends State<Innerframe> {
                   ),
                   SizedBox(height: 5),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      if (_currentTransaction != null) {setState(() {
+                        _currentTransaction!.cancelTransaction();
+                        _selectedProduct = null;
+                        _currentTransaction = null;
+                      });
+                      }},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 1, 46, 40),
                       padding: const EdgeInsets.symmetric(
