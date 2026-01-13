@@ -1,4 +1,4 @@
-# Vending Machine Design Document
+ # Vending Machine Design Document
 
 The vending machine has three modes:
 * Admin mode
@@ -7,12 +7,12 @@ The vending machine has three modes:
 
 ### Admin Mode
 
-The admin can refill the vending machine with products as well as with cash for change. It can be done through the interface. They are also able to get the cash out of the vending machine. The main state will be refreshed.
+The admin can refill the vending machine with products as well as with cash for change. It can be done through the interface. They are also able to withdraw cash out of the vending machine. The main state will be refreshed.
 
 
 ### User Mode
 
-Users are able to insert the coins in the machine, select only one product and press the button for buying. There is also a button for canceling, which allows the user to get the inserted money back and will cancel the transaction, which means the product will be unselected. 
+Users are able to insert the coins in the machine, select only one product and press the button for buying. There is also a button for canceling, which allows the user to get the inserted money back and  cancel the transaction, which means the product will be unselected. 
 
 ### Default Mode
 
@@ -66,7 +66,7 @@ This case will be first proved then executed.
 ### The Functionality Of The Default Mode
 ---
 
-Default mode can only exist when the acquired amount of money and products already exists thus the vending machine can be used. There will be two conditions:
+Default mode can only exist when the acquired amount of money and products already exist thus the vending machine can be used. There will be two conditions:
 
 * prove the amount of money and products
 * in case of deficiency inform the admin internally 
