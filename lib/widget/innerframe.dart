@@ -45,6 +45,7 @@ class _InnerframeState extends State<Innerframe> {
         return CoinMenu(
           onCoinTap: (double value) {
             setState(() {
+              _displaymassage = '';
               _currentTransaction ??= Transaction(
                 transactionId: UniqueKey().toString(),
               );
@@ -127,11 +128,16 @@ class _InnerframeState extends State<Innerframe> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      _displaymassage.isNotEmpty
-                          ? _displaymassage
-                          : (_currentBalance == 0
-                                ? 'Bitte Produkt wählen'
-                                : '${_currentBalance.toStringAsFixed(2)} €'),
+                      _displaymassage
+                              .isNotEmpty // Gibt es eine Nachricht (z.B. Rückgeld)?
+                          ? _displaymassage // Dann zeige sie.
+                          : _currentBalance >
+                                0 // Wurde schon Geld eingeworfen?
+                          ? '${_currentBalance.toStringAsFixed(2)} €' // Dann zeige den Kontostand.
+                          : _selectedProduct !=
+                                null // Wurde ein Produkt gewählt (aber noch nicht bezahlt)?
+                          ? '${(_selectedProduct!.price / 100).toStringAsFixed(2)} €' // Dann zeige dessen Preis.
+                          : 'Bitte Produkt wählen', // Ansonsten zeige den Standardtext.
                       style: TextStyle(
                         fontSize: _currentBalance == 0 ? 12 : 18,
                         fontWeight: FontWeight.bold,
@@ -217,15 +223,25 @@ class _InnerframeState extends State<Innerframe> {
                         );
                         if (result.success) {
                           setState(() {
-                            _dispensedProduct = _selectedProduct;
+                            int totalChange = result.changeCoins.fold(
+                              0,
+                              (sum, coin) => sum + coin,
+                            );
+                            _displaymassage =
+                                'Vielen Dank!\nRückgeld: ${(totalChange / 100).toStringAsFixed(2)} €';
                             _currentTransaction!.completeTransaction(
                               result.changeCoins,
                             );
+                            _dispensedProduct = _selectedProduct;
                             _selectedProduct = null;
                             _currentTransaction = null;
                           });
                         } else {
                           setState(() {
+                            double returned =
+                                _currentTransaction!.amountPaid / 100.0;
+                            _displaymassage =
+                                ' ${result.message}\nRückgabe: ${returned.toStringAsFixed(2)} €';
                             _currentTransaction!.failTransaction();
                             _selectedProduct = null;
                             _currentTransaction = null;
@@ -253,6 +269,10 @@ class _InnerframeState extends State<Innerframe> {
                     onPressed: () {
                       if (_currentTransaction != null) {
                         setState(() {
+                          double returned =
+                              _currentTransaction!.amountPaid / 100.0;
+                          _displaymassage =
+                              'Abbruch\nRückgabe: ${returned.toStringAsFixed(2)} €';
                           _currentTransaction!.cancelTransaction();
                           _selectedProduct = null;
                           _currentTransaction = null;
@@ -299,19 +319,20 @@ class _InnerframeState extends State<Innerframe> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _displaymassage = '';
                         _dispensedProduct = null;
+                        _selectedProduct = null;
+                        _currentTransaction = null;
                       });
                     },
                     child: Container(
                       height: 80,
                       width: 80,
                       margin: const EdgeInsets.symmetric(vertical: 5),
-
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-
                           colors: [
                             Color.fromARGB(255, 29, 29, 29), // sehr dunkel
                             Color.fromARGB(255, 42, 42, 42), // mittel
@@ -332,7 +353,6 @@ class _InnerframeState extends State<Innerframe> {
                             offset: Offset(-2, -2),
                           ),
                         ],
-
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: const Color.fromARGB(255, 0, 0, 0),
