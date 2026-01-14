@@ -28,13 +28,14 @@ class _AdminscreenState extends State<Adminscreen> {
       _coins = Coin.values.map((wert) => Coin(value: wert, count: 0)).toList();
     });
   }
-double get _gesamtGeld {
-  int summe=0;
+
+  double get _gesamtGeld {
+    int summe = 0;
     for (var coin in _coins) {
       summe += coin.value * coin.count;
     }
     return summe.toDouble() / 100; // Umwandlung in Euro
-}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,21 +115,16 @@ double get _gesamtGeld {
               itemCount: _coins.length,
               itemBuilder: (context, index) {
                 final coin = _coins[index];
-                // Wir wickeln das ListTile in eine Card ein
                 return Card(
-                  // margin steuert den Abstand NACH AUSSEN (zu den anderen Karten)
                   margin: const EdgeInsets.symmetric(
                     vertical: 10,
                     horizontal: 10,
                   ),
-                  // Wir verpacken das ListTile in ein Padding-Widget
                   child: Padding(
-                    padding: const EdgeInsets.all(
-                      8.0,
-                    ), // 8 Pixel Abstand rundherum
+                    padding: const EdgeInsets.all(8.0),
                     child: ListTile(
                       leading: Image.asset(Coin.getImage(coin.value)),
-                      // Hier teilen wir durch 100, um Euro anzuzeigen
+                      // durch 100, um Euro anzuzeigen
                       title: Text("${(coin.value / 100).toStringAsFixed(2)} €"),
                       trailing: SizedBox(
                         width: 120,

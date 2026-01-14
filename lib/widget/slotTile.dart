@@ -38,6 +38,7 @@ class Slottile extends StatelessWidget {
           ),
         ),
         child: Column(
+          
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SizedBox(height: 10),
@@ -45,7 +46,8 @@ class Slottile extends StatelessWidget {
             const SizedBox(height: 5),
 
             Text(
-              'Preis: ${prices.toStringAsFixed(2)} €',
+        
+              '${prices.toStringAsFixed(2)} €',
               style: TextStyle(
                 color: disabled ? Colors.grey : Colors.white,
                 fontSize: 14,
