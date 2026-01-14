@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:snack_automat/models/product.dart';
+import 'package:snack_automat/models/transaction.dart';
 import 'package:snack_automat/storage/snack_service.dart';
 import 'package:snack_automat/widget/slotTile.dart';
 import 'package:snack_automat/models/slot.dart';
 import 'package:snack_automat/widget/coin_menu.dart';
+import 'package:snack_automat/models/coinbox.dart';
 
 class Innerframe extends StatefulWidget {
   @override
@@ -11,11 +13,15 @@ class Innerframe extends StatefulWidget {
 }
 
 class _InnerframeState extends State<Innerframe> {
+  Transaction? _currentTransaction;
   Product? _selectedProduct;
+  String _displaymassage = '';
+  Product? _dispensedProduct;
 
   List<Slot> _slots = [];
   final SnackService _service = SnackService();
-  double _balance = 0.0;
+  final Coinbox _coinBox = Coinbox();
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +34,10 @@ class _InnerframeState extends State<Innerframe> {
     });
   }
 
+  double get _currentBalance {
+    return (_currentTransaction?.amountPaid ?? 0) / 100;
+  }
+
   void _showCoinMenu() {
     showModalBottomSheet(
       context: context,
@@ -35,7 +45,11 @@ class _InnerframeState extends State<Innerframe> {
         return CoinMenu(
           onCoinTap: (double value) {
             setState(() {
-              _balance += value;
+              _currentTransaction ??= Transaction(
+                transactionId: UniqueKey().toString(),
+              );
+              int cents = (value * 100).round();
+              _currentTransaction!.updatePayment(cents);
             });
           },
         );
@@ -75,6 +89,19 @@ class _InnerframeState extends State<Innerframe> {
                     onTap: () {
                       setState(() {
                         _selectedProduct = slot.product;
+
+                        if (_currentTransaction != null) {
+                          _currentTransaction!.setProduct(
+                            slot.product.id,
+                            slot.product.price,
+                          );
+                        } else {
+                          _currentTransaction = Transaction(
+                            transactionId: UniqueKey().toString(),
+                            productId: slot.product.id,
+                            price: slot.product.price,
+                          );
+                        }
                       });
                     },
                     selected: _selectedProduct?.id == slot.product.id,
@@ -100,11 +127,13 @@ class _InnerframeState extends State<Innerframe> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      _balance == 0
-                          ? 'Münzen einwerfen'
-                          : '${_balance.toStringAsFixed(2)} €',
+                      _displaymassage.isNotEmpty
+                          ? _displaymassage
+                          : (_currentBalance == 0
+                                ? 'Bitte Produkt wählen'
+                                : '${_currentBalance.toStringAsFixed(2)} €'),
                       style: TextStyle(
-                        fontSize: _balance == 0 ? 12 : 18,
+                        fontSize: _currentBalance == 0 ? 12 : 18,
                         fontWeight: FontWeight.bold,
                         color: Color.fromARGB(255, 76, 248, 53),
                       ),
@@ -180,7 +209,30 @@ class _InnerframeState extends State<Innerframe> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      if (_currentTransaction != null) {
+                        PaymentResult result = _coinBox.processPayment(
+                          _currentTransaction!.price,
+                          _currentTransaction!.insertedCoins,
+                        );
+                        if (result.success) {
+                          setState(() {
+                            _dispensedProduct = _selectedProduct;
+                            _currentTransaction!.completeTransaction(
+                              result.changeCoins,
+                            );
+                            _selectedProduct = null;
+                            _currentTransaction = null;
+                          });
+                        } else {
+                          setState(() {
+                            _currentTransaction!.failTransaction();
+                            _selectedProduct = null;
+                            _currentTransaction = null;
+                          });
+                        }
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 1, 46, 40),
                       padding: const EdgeInsets.symmetric(
@@ -198,7 +250,15 @@ class _InnerframeState extends State<Innerframe> {
                   ),
                   SizedBox(height: 5),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      if (_currentTransaction != null) {
+                        setState(() {
+                          _currentTransaction!.cancelTransaction();
+                          _selectedProduct = null;
+                          _currentTransaction = null;
+                        });
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 1, 46, 40),
                       padding: const EdgeInsets.symmetric(
@@ -236,49 +296,52 @@ class _InnerframeState extends State<Innerframe> {
                     ),
                   ),
                   SizedBox(height: 20),
-                  Container(
-                    height: 80,
-                    width: 80,
-                    margin: const EdgeInsets.symmetric(vertical: 5),
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _dispensedProduct = null;
+                      });
+                    },
+                    child: Container(
+                      height: 80,
+                      width: 80,
+                      margin: const EdgeInsets.symmetric(vertical: 5),
 
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
 
-                        colors: [
-                          Color.fromARGB(255, 29, 29, 29), // sehr dunkel
-                          Color.fromARGB(255, 42, 42, 42), // mittel
-                          Color.fromARGB(255, 58, 58, 58), // Highlight
-                          Color.fromARGB(255, 37, 37, 37), // zurück
+                          colors: [
+                            Color.fromARGB(255, 29, 29, 29), // sehr dunkel
+                            Color.fromARGB(255, 42, 42, 42), // mittel
+                            Color.fromARGB(255, 58, 58, 58), // Highlight
+                            Color.fromARGB(255, 37, 37, 37), // zurück
+                          ],
+                          stops: [0.0, 0.4, 0.6, 1.0],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black54,
+                            blurRadius: 6,
+                            offset: Offset(3, 4),
+                          ),
+                          BoxShadow(
+                            color: Colors.white12,
+                            blurRadius: 4,
+                            offset: Offset(-2, -2),
+                          ),
                         ],
-                        stops: [0.0, 0.4, 0.6, 1.0],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black54,
-                          blurRadius: 6,
-                          offset: Offset(3, 4),
-                        ),
-                        BoxShadow(
-                          color: Colors.white12,
-                          blurRadius: 4,
-                          offset: Offset(-2, -2),
-                        ),
-                      ],
 
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color.fromARGB(255, 0, 0, 0),
-                        width: 2,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color.fromARGB(255, 0, 0, 0),
+                          width: 2,
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      '',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      child: _dispensedProduct != null
+                          ? Image.asset(_dispensedProduct!.image)
+                          : const SizedBox.shrink(),
                     ),
                   ),
                 ],

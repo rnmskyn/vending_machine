@@ -16,7 +16,7 @@ class Slottile extends StatelessWidget {
   Widget build(BuildContext context) {
     final disabled = slot.isEmpty();
 
-    final prices = slot.product.price.toStringAsFixed(2);
+    final prices = slot.product.price.toDouble() / 100;
 
     return InkWell(
       onTap: disabled ? null : onTap,
@@ -38,6 +38,7 @@ class Slottile extends StatelessWidget {
           ),
         ),
         child: Column(
+          
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SizedBox(height: 10),
@@ -45,7 +46,8 @@ class Slottile extends StatelessWidget {
             const SizedBox(height: 5),
 
             Text(
-              '\$$prices',
+        
+              '${prices.toStringAsFixed(2)} €',
               style: TextStyle(
                 color: disabled ? Colors.grey : Colors.white,
                 fontSize: 14,

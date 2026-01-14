@@ -8,7 +8,7 @@ class SnackService {
         product: Product(
           id: 'p1',
           name: 'Riegel',
-          price: 1.99,
+          price: 150,
           image: 'images/snack.png',
         ),
       ),
@@ -16,7 +16,7 @@ class SnackService {
         product: Product(
           id: 'p2',
           name: 'Chips',
-          price: 0.99,
+          price: 190,
           image: 'images/kekse.png',
         ),
       ),
@@ -24,7 +24,7 @@ class SnackService {
         product: Product(
           id: 'p3',
           name: 'Kekse',
-          price: 1.99,
+          price: 1,
           image: 'images/kekse.png',
         ),
       ),
@@ -32,7 +32,7 @@ class SnackService {
         product: Product(
           id: 'p4',
           name: 'Bonbons',
-          price: 0.99,
+          price: 3,
           image: 'images/snack.png',
         ),
       ),
@@ -40,7 +40,7 @@ class SnackService {
         product: Product(
           id: 'p5',
           name: 'Waffeln',
-          price: 1.99,
+          price: 1,
           image: 'images/snack.png',
         ),
       ),
@@ -48,7 +48,7 @@ class SnackService {
         product: Product(
           id: 'p6',
           name: 'Wasser',
-          price: 0.99,
+          price: 250,
           image: 'images/popcorn.png',
         ),
       ),
